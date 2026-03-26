@@ -84,6 +84,9 @@
       box-shadow:var(--shadow);
       transition:transform .18s ease, box-shadow .18s ease, background .18s ease;
       white-space:nowrap;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
     }
     .btn:hover { transform:translateY(-1px); background:#f8fbff; }
     main {
@@ -92,6 +95,8 @@
       cursor:grab;
       padding:24px 24px 48px;
       scroll-behavior:smooth;
+      overscroll-behavior:contain;
+      -webkit-overflow-scrolling:touch;
     }
     main.dragging { cursor:grabbing; user-select:none; }
     .hint {
@@ -113,21 +118,21 @@
     .mindmap-shell {
       display:inline-block;
       min-width:max-content;
-      padding:0 8px 120px;
+      padding:8px 20px 140px;
     }
     .tree ul {
-      padding-top:24px;
+      padding-top:28px;
       position:relative;
       display:flex;
       justify-content:center;
-      gap:4px;
+      gap:10px;
       margin:0;
     }
     .tree li {
       list-style:none;
       text-align:center;
       position:relative;
-      padding:24px 7px 0;
+      padding:28px 10px 0;
     }
     .tree li::before,
     .tree li::after {
@@ -171,15 +176,18 @@
       align-items:center;
       justify-content:center;
       gap:6px;
-      min-width:128px;
-      max-width:188px;
-      padding:12px 14px;
-      border-radius:15px;
+      min-width:156px;
+      max-width:220px;
+      min-height:88px;
+      padding:14px 16px;
+      border-radius:18px;
       border:1px solid #dbe5f0;
       background:#fff;
       color:#253247;
       text-decoration:none;
-      line-height:1.22;
+      line-height:1.32;
+      text-wrap:balance;
+      overflow-wrap:anywhere;
       box-shadow:0 8px 18px rgba(15,23,42,.06);
       position:relative;
       overflow:hidden;
@@ -209,11 +217,23 @@
       line-height:1.25;
     }
     .node.root {
-      min-width:210px;
-      max-width:260px;
+      min-width:250px;
+      max-width:310px;
+      min-height:108px;
       background:linear-gradient(135deg, #eff6ff, #ffffff);
       border-color:#bfd7ff;
       color:#0f1f3c;
+    }
+    .tree > ul > li > ul > li > .node {
+      min-width:210px;
+      max-width:250px;
+      min-height:96px;
+      font-size:1rem;
+    }
+    .tree > ul > li > ul > li > ul > li > .node {
+      min-width:190px;
+      max-width:230px;
+      min-height:90px;
     }
     .node.root::before { background:linear-gradient(90deg, var(--blue), var(--purple)); height:6px; }
     .lig::before { background:var(--amber); }
@@ -306,12 +326,15 @@
       padding:22px;
       display:grid;
       gap:18px;
+      min-width:0;
     }
     .panel {
       background:#fbfcfe;
       border:1px solid #e8eef5;
       border-radius:18px;
       padding:18px;
+      min-width:0;
+      overflow-wrap:anywhere;
     }
     .panel h3 {
       margin:0 0 10px;
@@ -347,6 +370,22 @@
     .example-content {
       line-height:1.75;
       font-size:.98rem;
+      min-width:0;
+      white-space:normal;
+      overflow-wrap:anywhere;
+    }
+    .panel .mjx-container[display="true"],
+    .cheat-card .mjx-container[display="true"] {
+      display:block;
+      overflow-x:auto;
+      overflow-y:hidden;
+      max-width:100%;
+      padding-bottom:2px;
+    }
+    .panel .mjx-container[jax="SVG"] > svg,
+    .cheat-card .mjx-container[jax="SVG"] > svg {
+      max-width:100%;
+      height:auto !important;
     }
 
     .cheat-grid {
@@ -403,46 +442,83 @@
         flex-direction:column;
         align-items:flex-start;
       }
-      .tree ul { gap:2px; padding-top:20px; }
-      .tree li { padding:20px 5px 0; }
-      .tree li::before, .tree li::after, .tree ul ul::before { height:20px; }
+      .btn { width:100%; justify-content:center; }
+      .mindmap-shell { padding:8px 16px 120px; }
+      .tree ul { gap:8px; padding-top:24px; }
+      .tree li { padding:24px 8px 0; }
       .node {
-        min-width:116px;
-        max-width:160px;
-        padding:10px 11px;
-        font-size:.9rem;
-        border-radius:13px;
+        min-width:150px;
+        max-width:210px;
+        min-height:86px;
+        padding:12px 14px;
+        font-size:.94rem;
       }
-      .node small { font-size:9px; }
-      .node.root { min-width:190px; max-width:220px; }
+      .node small { font-size:10px; }
+      .node.root { min-width:220px; max-width:280px; }
+      .tree > ul > li > ul > li > .node {
+        min-width:190px;
+        max-width:230px;
+      }
+      .tree > ul > li > ul > li > ul > li > .node {
+        min-width:170px;
+        max-width:205px;
+      }
       .cheat-grid { grid-template-columns:1fr; }
     }
 
     @media (max-width: 700px) {
-      main { padding:14px 12px 34px; }
-      .hint { font-size:10px; bottom:10px; left:10px; }
-      .tree ul { padding-top:16px; gap:1px; }
-      .tree li { padding:16px 3px 0; }
-      .tree li::before, .tree li::after, .tree ul ul::before { height:16px; }
-      .node {
-        min-width:98px;
-        max-width:120px;
-        padding:8px 8px;
-        font-size:.78rem;
-        border-radius:11px;
+      main { padding:12px 10px 28px; }
+      .hint {
+        font-size:10px;
+        bottom:10px;
+        left:10px;
+        max-width:calc(100vw - 28px);
+        white-space:normal;
       }
-      .node .emoji { font-size:14px; }
-      .node small { font-size:8px; }
+      .mindmap-shell { padding:6px 10px 96px; }
+      .tree ul { padding-top:18px; gap:6px; }
+      .tree li { padding:18px 6px 0; }
+      .tree li::before, .tree li::after, .tree ul ul::before { height:18px; }
+      .node {
+        min-width:142px;
+        max-width:184px;
+        min-height:82px;
+        padding:11px 12px;
+        font-size:.86rem;
+        border-radius:14px;
+      }
+      .node .emoji { font-size:16px; }
+      .node small { font-size:9px; }
+      .node.root { min-width:205px; max-width:245px; min-height:100px; }
+      .tree > ul > li > ul > li > .node {
+        min-width:178px;
+        max-width:210px;
+      }
+      .tree > ul > li > ul > li > ul > li > .node {
+        min-width:160px;
+        max-width:192px;
+      }
+      .modal {
+        align-items:flex-start;
+        padding:12px;
+      }
       .modal-box {
         border-radius:18px;
-        max-height:95vh;
+        max-height:calc(100dvh - 24px);
+        margin-top:0;
       }
       .modal-head, .modal-body { padding:16px; }
-      .panel { padding:14px; border-radius:14px; }
-      .condition {
-        overflow:auto;
+      .modal-head {
+        position:sticky;
+        top:0;
+        z-index:1;
       }
-      .example-content { font-size:.92rem; min-width:260px; }
+      .panel { padding:14px; border-radius:14px; }
+      .condition,
+      .example,
+      .steps,
+      .tips { overflow-x:auto; }
+      .example-content { font-size:.92rem; }
     }
   </style>
 </head>
