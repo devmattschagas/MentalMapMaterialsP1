@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>Mapa Mental — Ciência dos Materiais</title>
+  <meta name="description" content="Mapa mental/fluxograma de Ciência dos Materiais focado em resolução prática de exercícios.">
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['$', '$'], ['\\(', '\\)']],
+        displayMath: [['$$', '$$'], ['\\[', '\\]']],
+        processEscapes: true
+      },
+      svg: { fontCache: 'global' }
+    };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+  <style>
+    :root {
+      --bg:#f3f6fb;
+      --panel:#ffffff;
+      --text:#162031;
+      --muted:#5c6878;
+      --line:#cbd5e1;
+      --blue:#2563eb;
+      --green:#16a34a;
+      --amber:#d97706;
+      --purple:#7c3aed;
+      --rose:#e11d48;
+      --cyan:#0891b2;
+      --shadow:0 14px 30px rgba(15,23,42,.08);
+      --radius:16px;
+    }
+    * { box-sizing:border-box; }
+    html, body { margin:0; height:100%; }
+    body {
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+      background:
+        radial-gradient(circle at top right, rgba(37,99,235,.09), transparent 25%),
+        radial-gradient(circle at left 20%, rgba(124,58,237,.07), transparent 22%),
+        var(--bg);
+      color:var(--text);
+      overflow:hidden;
+    }
+    .app {
+      height:100%;
+      display:flex;
+      flex-direction:column;
+    }
+    header {
+      flex:0 0 auto;
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:14px;
+      padding:18px 20px;
+      background:rgba(255,255,255,.9);
+      backdrop-filter:blur(14px);
+      border-bottom:1px solid rgba(148,163,184,.25);
+      box-shadow:0 6px 18px rgba(15,23,42,.04);
+      z-index:5;
+    }
+    .title-wrap h1 {
+      margin:0 0 6px;
+      font-size:clamp(1.15rem, 2vw, 1.7rem);
+      line-height:1.1;
+    }
+    .title-wrap p {
+      margin:0;
+      color:var(--muted);
+      font-size:.92rem;
+      max-width:860px;
+    }
+    .btn {
+      border:1px solid #dbe4f0;
+      background:#fff;
+      color:#162031;
+      border-radius:999px;
+      padding:11px 15px;
+      font:inherit;
+      font-weight:700;
+      cursor:pointer;
+      box-shadow:var(--shadow);
+      transition:transform .18s ease, box-shadow .18s ease, background .18s ease;
+      white-space:nowrap;
+    }
+    .btn:hover { transform:translateY(-1px); background:#f8fbff; }
+    main {
+      flex:1 1 auto;
+      overflow:auto;
+      cursor:grab;
+      padding:24px 24px 48px;
+      scroll-behavior:smooth;
+    }
+    main.dragging { cursor:grabbing; user-select:none; }
+    .hint {
+      position:sticky;
+      left:12px;
+      bottom:12px;
+      display:inline-flex;
+      padding:8px 11px;
+      border-radius:999px;
+      background:rgba(15,23,42,.78);
+      color:#fff;
+      font-size:11px;
+      font-weight:700;
+      letter-spacing:.02em;
+      z-index:2;
+      width:fit-content;
+      backdrop-filter:blur(8px);
+    }
+    .mindmap-shell {
+      display:inline-block;
+      min-width:max-content;
+      padding:0 8px 120px;
+    }
+    .tree ul {
+      padding-top:24px;
+      position:relative;
+      display:flex;
+      justify-content:center;
+      gap:4px;
+      margin:0;
+    }
+    .tree li {
+      list-style:none;
+      text-align:center;
+      position:relative;
+      padding:24px 7px 0;
+    }
+    .tree li::before,
+    .tree li::after {
+      content:'';
+      position:absolute;
+      top:0;
+      right:50%;
+      width:50%;
+      height:24px;
+      border-top:2px solid var(--line);
+    }
+    .tree li::after {
+      right:auto;
+      left:50%;
+      border-left:2px solid var(--line);
+    }
+    .tree li:only-child::before,
+    .tree li:only-child::after { display:none; }
+    .tree li:only-child { padding-top:0; }
+    .tree li:first-child::before,
+    .tree li:last-child::after { border:0 none; }
+    .tree li:last-child::before {
+      border-right:2px solid var(--line);
+      border-radius:0 12px 0 0;
+    }
+    .tree li:first-child::after {
+      border-radius:12px 0 0 0;
+    }
+    .tree ul ul::before {
+      content:'';
+      position:absolute;
+      top:0;
+      left:50%;
+      width:0;
+      height:24px;
+      border-left:2px solid var(--line);
+    }
+    .node {
+      display:inline-flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      gap:6px;
+      min-width:128px;
+      max-width:188px;
+      padding:12px 14px;
+      border-radius:15px;
+      border:1px solid #dbe5f0;
+      background:#fff;
+      color:#253247;
+      text-decoration:none;
+      line-height:1.22;
+      box-shadow:0 8px 18px rgba(15,23,42,.06);
+      position:relative;
+      overflow:hidden;
+      transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease, background .18s ease;
+    }
+    .node::before {
+      content:'';
+      position:absolute;
+      top:0;
+      left:0;
+      right:0;
+      height:5px;
+      background:#94a3b8;
+    }
+    .node:hover, .node.active {
+      transform:translateY(-3px);
+      box-shadow:0 14px 24px rgba(15,23,42,.1);
+      border-color:#c7d4e4;
+      background:#fcfdff;
+    }
+    .node .emoji { font-size:18px; line-height:1; }
+    .node small {
+      display:block;
+      font-size:10px;
+      color:#66748a;
+      font-weight:600;
+      line-height:1.25;
+    }
+    .node.root {
+      min-width:210px;
+      max-width:260px;
+      background:linear-gradient(135deg, #eff6ff, #ffffff);
+      border-color:#bfd7ff;
+      color:#0f1f3c;
+    }
+    .node.root::before { background:linear-gradient(90deg, var(--blue), var(--purple)); height:6px; }
+    .lig::before { background:var(--amber); }
+    .lig { background:#fff9ef; border-color:#fde0b6; color:#7b4b07; }
+    .est::before { background:var(--blue); }
+    .est { background:#eef5ff; border-color:#cfe0ff; color:#11408f; }
+    .imp::before { background:var(--purple); }
+    .imp { background:#f5f0ff; border-color:#ddd0ff; color:#4b248f; }
+    .dif::before { background:var(--green); }
+    .dif { background:#eefcf3; border-color:#caedd7; color:#0f6a38; }
+    .detail::before { background:var(--cyan); }
+    .detail { background:#f1fbfd; border-color:#cdeff5; color:#0c6175; }
+    .warn::before { background:var(--rose); }
+    .warn { background:#fff2f6; border-color:#ffd0dc; color:#9d1639; }
+
+    .modal {
+      position:fixed;
+      inset:0;
+      z-index:20;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:18px;
+      opacity:0;
+      visibility:hidden;
+      transition:opacity .2s ease, visibility .2s ease;
+    }
+    .modal.open { opacity:1; visibility:visible; }
+    .modal-backdrop {
+      position:absolute;
+      inset:0;
+      background:rgba(8,15,30,.62);
+      backdrop-filter:blur(8px);
+    }
+    .modal-box {
+      position:relative;
+      width:min(980px, 100%);
+      max-height:min(92vh, 980px);
+      background:#fff;
+      border-radius:24px;
+      overflow:hidden;
+      box-shadow:0 30px 60px rgba(8,15,30,.26);
+      transform:translateY(10px) scale(.98);
+      transition:transform .22s ease;
+      display:flex;
+      flex-direction:column;
+    }
+    .modal.open .modal-box { transform:translateY(0) scale(1); }
+    .modal-head {
+      padding:20px 22px 16px;
+      border-bottom:1px solid #edf2f7;
+      background:linear-gradient(135deg, #f8fbff 0%, #ffffff 70%);
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      align-items:flex-start;
+    }
+    .badge {
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:7px 11px;
+      border-radius:999px;
+      background:#eff6ff;
+      color:#1d4ed8;
+      font-size:.78rem;
+      font-weight:800;
+      letter-spacing:.03em;
+      margin-bottom:10px;
+    }
+    .modal-head h2 {
+      margin:0;
+      font-size:clamp(1.35rem, 2.4vw, 2rem);
+      line-height:1.1;
+    }
+    .close {
+      border:none;
+      background:#f3f6fb;
+      color:#445067;
+      width:40px;
+      height:40px;
+      border-radius:999px;
+      cursor:pointer;
+      font-size:1.2rem;
+      font-weight:700;
+      flex:0 0 auto;
+    }
+    .modal-body {
+      overflow:auto;
+      padding:22px;
+      display:grid;
+      gap:18px;
+    }
+    .panel {
+      background:#fbfcfe;
+      border:1px solid #e8eef5;
+      border-radius:18px;
+      padding:18px;
+    }
+    .panel h3 {
+      margin:0 0 10px;
+      font-size:.86rem;
+      text-transform:uppercase;
+      letter-spacing:.08em;
+      color:#5b6a7f;
+    }
+    .condition {
+      background:linear-gradient(135deg, #edf4ff, #ffffff);
+      border:1px solid #d9e8ff;
+    }
+    .concept {
+      color:#243247;
+      line-height:1.65;
+    }
+    .steps .step,
+    .tips .tip {
+      padding:12px 0;
+      border-top:1px solid #ebf0f5;
+      color:#243247;
+      line-height:1.6;
+    }
+    .steps .step:first-child,
+    .tips .tip:first-child { border-top:none; padding-top:0; }
+    .example {
+      background:#0f172a;
+      border-color:#1e293b;
+      color:#eef2ff;
+      overflow:auto;
+    }
+    .example h3 { color:#cbd5e1; }
+    .example-content {
+      line-height:1.75;
+      font-size:.98rem;
+    }
+
+    .cheat-grid {
+      display:grid;
+      grid-template-columns:repeat(2, minmax(0, 1fr));
+      gap:14px;
+    }
+    .cheat-card {
+      border:1px solid #e6edf6;
+      background:#fbfdff;
+      border-radius:18px;
+      padding:16px;
+    }
+    .cheat-card h3 {
+      margin:0 0 10px;
+      font-size:1rem;
+    }
+    .cheat-card div, .cheat-card li {
+      line-height:1.65;
+      color:#263448;
+    }
+    .cheat-card ul {
+      margin:8px 0 0 18px;
+      padding:0;
+    }
+
+    .legend {
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      margin-top:8px;
+    }
+    .legend span {
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:7px 10px;
+      border-radius:999px;
+      font-size:.78rem;
+      font-weight:700;
+      background:#fff;
+      border:1px solid #e4ebf3;
+      color:#4c5b70;
+    }
+    .dot {
+      width:10px;
+      height:10px;
+      border-radius:999px;
+      display:inline-block;
+    }
+
+    @media (max-width: 960px) {
+      header {
+        flex-direction:column;
+        align-items:flex-start;
+      }
+      .tree ul { gap:2px; padding-top:20px; }
+      .tree li { padding:20px 5px 0; }
+      .tree li::before, .tree li::after, .tree ul ul::before { height:20px; }
+      .node {
+        min-width:116px;
+        max-width:160px;
+        padding:10px 11px;
+        font-size:.9rem;
+        border-radius:13px;
+      }
+      .node small { font-size:9px; }
+      .node.root { min-width:190px; max-width:220px; }
+      .cheat-grid { grid-template-columns:1fr; }
+    }
+
+    @media (max-width: 700px) {
+      main { padding:14px 12px 34px; }
+      .hint { font-size:10px; bottom:10px; left:10px; }
+      .tree ul { padding-top:16px; gap:1px; }
+      .tree li { padding:16px 3px 0; }
+      .tree li::before, .tree li::after, .tree ul ul::before { height:16px; }
+      .node {
+        min-width:98px;
+        max-width:120px;
+        padding:8px 8px;
+        font-size:.78rem;
+        border-radius:11px;
+      }
+      .node .emoji { font-size:14px; }
+      .node small { font-size:8px; }
+      .modal-box {
+        border-radius:18px;
+        max-height:95vh;
+      }
+      .modal-head, .modal-body { padding:16px; }
+      .panel { padding:14px; border-radius:14px; }
+      .condition {
+        overflow:auto;
+      }
+      .example-content { font-size:.92rem; min-width:260px; }
+    }
+  </style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="title-wrap">
+      <h1>🧠 Mapa Mental de Ciência dos Materiais — guia objetivo para a prova</h1>
+      <p>Formato de fluxograma/mapa mental, focado nos tipos de raciocínio que mais aparecem: ligações, estrutura cristalina, imperfeições e difusão. Clique nos cards para abrir a receita prática de cada bloco.</p>
+      <div class="legend">
+        <span><i class="dot" style="background:var(--amber)"></i>Ligações</span>
+        <span><i class="dot" style="background:var(--blue)"></i>Estrutura</span>
+        <span><i class="dot" style="background:var(--purple)"></i>Imperfeições</span>
+        <span><i class="dot" style="background:var(--green)"></i>Difusão</span>
+        <span><i class="dot" style="background:var(--cyan)"></i>Receita específica</span>
+      </div>
+    </div>
+    <button class="btn" onclick="openCheat()">📌 Fórmulas-relâmpago</button>
+  </header>
+
+  <main id="mapScroller">
+    <div class="mindmap-shell">
+      <div class="tree">
+        <ul>
+          <li>
+            <a href="#" class="node root" onclick="openModal(event, 'start', this)">
+              <span class="emoji">🧠</span>
+              Ciência dos Materiais
+              <small>fluxo mental de prova</small>
+            </a>
+            <ul>
+              <li>
+                <a href="#" class="node lig" onclick="openModal(event, 'ligacoes', this)">
+                  <span class="emoji">⚛️</span>
+                  Ligações e Energia
+                  <small>tipo de ligação • energia de rede • PCI</small>
+                </a>
+                <ul>
+                  <li>
+                    <a href="#" class="node lig" onclick="openModal(event, 'tipo_ligacao', this)">
+                      <span class="emoji">🔎</span>
+                      Reconhecer ligação
+                      <small>iônica • covalente • metálica</small>
+                    </a>
+                  </li>
+                  <li>
+                    <a href="#" class="node detail" onclick="openModal(event, 'energia_rede', this)">
+                      <span class="emoji">🧮</span>
+                      Energia de rede
+                      <small>Born-Haber / Hess</small>
+                    </a>
+                  </li>
+                  <li>
+                    <a href="#" class="node detail" onclick="openModal(event, 'pci', this)">
+                      <span class="emoji">📏</span>
+                      PCI
+                      <small>$\Delta EN$ e caráter iônico</small>
+                    </a>
+                  </li>
+                  <li>
+                    <a href="#" class="node detail" onclick="openModal(event, 'energia_ligacao', this)">
+                      <span class="emoji">📈</span>
+                      Energia de ligação
+                      <small>$E_0$, $T_f$, rigidez</small>
+                    </a>
+                  </li>
+                </ul>
+              </li>
+
+              <li>
+                <a href="#" class="node est" onclick="openModal(event, 'estrutura', this)">
+                  <span class="emoji">🧊</span>
+                  Estrutura Cristalina
+                  <small>CFC • CCC • HC • Bragg</small>
+                </a>
+                <ul>
+                  <li>
+                    <a href="#" class="node detail" onclick="openModal(event, 'cubicas', this)">
+                      <span class="emoji">📐</span>
+                      CFC, CCC e HC
+                      <small>relações $a-r$ e átomos/célula</small>
+                    </a>
+                  </li>
+                  <li>
+                    <a href="#" class="node detail" onclick="openModal(event, 'densidade_fea', this)">
+                      <span class="emoji">⚖️</span>
+                      Densidade e FEA
+                      <small>$\rho$, volume e empacotamento</small>
+                    </a>
+                  </li>
+                  <li>
+                    <a href="#" class="node detail" onclick="openModal(event, 'cristalografia', this)">
+                      <span class="emoji">🧭</span>
+                      Direções e planos
+                      <small>$[uvw]$ e $(hkl)$</small>
+                    </a>
+                  </li>
+                  <li>
+                    <a href="#" class="node detail" onclick="openModal(event, 'bragg', this)">
+                      <span class="emoji">📡</span>
+                      Bragg
+                      <small>$n\lambda=2d\sin\theta$</small>
+                    </a>
+                  </li>
+                  <li>
+                    <a href="#" class="node detail" onclick="openModal(event, 'ionicos', this)">
+                      <span class="emoji">🧱</span>
+                      Estruturas iônicas
+                      <small>NaCl • CsCl • razão de raios</small>
+                    </a>
+                  </li>
+                </ul>
+              </li>
+
+              <li>
+                <a href="#" class="node imp" onclick="openModal(event, 'imperfeicoes', this)">
+                  <span class="emoji">🕳️</span>
+                  Imperfeições
+                  <small>lacunas • soluções sólidas • interfaces</small>
+                </a>
+                <ul>
+                  <li>
+                    <a href="#" class="node detail" onclick="openModal(event, 'vacancias', this)">
+                      <span class="emoji">⭕</span>
+                      Vacâncias
+                      <small>$N_v$, $Q_v$ e densidade real</small>
+                    </a>
+                  </li>
+                  <li>
+                    <a href="#" class="node detail" onclick="openModal(event, 'solidas', this)">
+                      <span class="emoji">🔁</span>
+                      Soluções sólidas
+                      <small>intersticial • substitucional</small>
+                    </a>
+                  </li>
+                  <li>
+                    <a href="#" class="node detail" onclick="openModal(event, 'interfaces', this)">
+                      <span class="emoji">🔲</span>
+                      Superfície e contorno
+                      <small>energia interfacial</small>
+                    </a>
+                  </li>
+                </ul>
+              </li>
+
+              <li>
+                <a href="#" class="node dif" onclick="openModal(event, 'difusao', this)">
+                  <span class="emoji">🌫️</span>
+                  Difusão
+                  <small>Fick I • Fick II • Arrhenius</small>
+                </a>
+                <ul>
+                  <li>
+                    <a href="#" class="node detail" onclick="openModal(event, 'fick1', this)">
+                      <span class="emoji">➡️</span>
+                      Fick I
+                      <small>fluxo em estado estacionário</small>
+                    </a>
+                  </li>
+                  <li>
+                    <a href="#" class="node detail" onclick="openModal(event, 'fick2', this)">
+                      <span class="emoji">⏳</span>
+                      Fick II
+                      <small>tempo e profundidade</small>
+                    </a>
+                  </li>
+                  <li>
+                    <a href="#" class="node detail" onclick="openModal(event, 'arrhenius', this)">
+                      <span class="emoji">🔥</span>
+                      Arrhenius
+                      <small>$D_0$, $Q_D$ e temperatura</small>
+                    </a>
+                  </li>
+                </ul>
+              </li>
+
+            </ul>
+          </li>
+        </ul>
+      </div>
+    </div>
+    <div class="hint">Arraste para navegar • toque nos cards</div>
+  </main>
+</div>
+
+<div id="modal" class="modal" aria-hidden="true">
+  <div class="modal-backdrop" onclick="closeModal()"></div>
+  <div class="modal-box">
+    <div class="modal-head">
+      <div>
+        <div class="badge" id="modalBadge">VISÃO GERAL</div>
+        <h2 id="modalTitle">Título</h2>
+      </div>
+      <button class="close" onclick="closeModal()" aria-label="Fechar">×</button>
+    </div>
+    <div class="modal-body">
+      <section class="panel condition">
+        <h3>Quando esse ramo acende na sua cabeça</h3>
+        <div id="modalCondition"></div>
+      </section>
+      <section class="panel">
+        <h3>Ideia central</h3>
+        <div class="concept" id="modalConcept"></div>
+      </section>
+      <section class="panel steps">
+        <h3>Receita prática</h3>
+        <div id="modalSteps"></div>
+      </section>
+      <section class="panel tips">
+        <h3>Pegadinhas e lembretes</h3>
+        <div id="modalTips"></div>
+      </section>
+      <section class="panel example">
+        <h3>Resumo aplicado</h3>
+        <div class="example-content" id="modalExample"></div>
+      </section>
+    </div>
+  </div>
+</div>
+
+<div id="cheatModal" class="modal" aria-hidden="true">
+  <div class="modal-backdrop" onclick="closeCheat()"></div>
+  <div class="modal-box">
+    <div class="modal-head">
+      <div>
+        <div class="badge">REVISÃO RELÂMPAGO</div>
+        <h2>Fórmulas que valem ouro na véspera</h2>
+      </div>
+      <button class="close" onclick="closeCheat()" aria-label="Fechar">×</button>
+    </div>
+    <div class="modal-body">
+      
+<div class="cheat-grid">
+  <section class="cheat-card">
+    <h3>Ligações</h3>
+    <div>$$\%CI=\left(1-e^{-({\Delta EN})^2/4}\right)\cdot 100$$</div>
+    <div>Maior módulo de energia de rede $\Rightarrow$ ligação iônica mais forte.</div>
+  </section>
+  <section class="cheat-card">
+    <h3>Células unitárias</h3>
+    <div>$$\text{CFC: }4r=\sqrt{2}a \qquad \text{CCC: }4r=\sqrt{3}a$$</div>
+    <div>$$\rho=\frac{nA}{V_cN_A}$$</div>
+    <div>CFC: $n=4$, $APF\approx0{,}74$ ; CCC: $n=2$, $APF\approx0{,}68$</div>
+  </section>
+  <section class="cheat-card">
+    <h3>Cristalografia e Bragg</h3>
+    <div>Direção: $[uvw]$ &nbsp;&nbsp; Plano: $(hkl)$</div>
+    <div>$$d_{hkl}=\frac{a}{\sqrt{h^2+k^2+l^2}} \quad (\text{cúbicos})$$</div>
+    <div>$$n\lambda=2d\sin\theta$$</div>
+  </section>
+  <section class="cheat-card">
+    <h3>Vacâncias</h3>
+    <div>$$N_v=N\exp\left(-\frac{Q_v}{kT}\right)$$</div>
+    <div>Use $T$ em kelvin e unidade coerente para $k$ e $Q_v$.</div>
+  </section>
+  <section class="cheat-card">
+    <h3>Difusão</h3>
+    <div>$$J=-D\frac{dC}{dx}$$</div>
+    <div>$$D=D_0\exp\left(-\frac{Q_D}{RT}\right)$$</div>
+    <div>$$\frac{C_x-C_0}{C_s-C_0}=1-\operatorname{erf}\left(\frac{x}{2\sqrt{Dt}}\right)$$</div>
+  </section>
+  <section class="cheat-card">
+    <h3>Hume-Rothery</h3>
+    <div>Solubilidade substitucional favorecida por:</div>
+    <ul>
+      <li>raios próximos</li>
+      <li>mesma estrutura cristalina</li>
+      <li>eletronegatividade parecida</li>
+      <li>mesma valência ajuda</li>
+    </ul>
+  </section>
+</div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+  const materialData = {"start": {"title": "Ciência dos Materiais — Fluxo Mental de Prova", "badge": "VISÃO GERAL", "condition": "$$\\text{A ideia não é decorar questões; é reconhecer famílias de raciocínio.}$$", "concept": "Este mapa foi organizado como um fluxo de pensamento para estudo: você parte do tema grande, identifica o que costuma ser cobrado naquele bloco e aplica a receita correspondente. O foco está nos quatro blocos que aparecem nas listas e na base teórica do Callister: ligações, estrutura cristalina, imperfeições e difusão.", "steps": ["<strong>1. Estude por famílias.</strong> Em vez de memorizar exercícios, agrupe os problemas por mecanismo físico.", "<strong>2. Em cada família, grave 3 coisas:</strong> o que a questão quer, a fórmula central e a interpretação física.", "<strong>3. Sempre amarre conta e conceito.</strong> Em Materiais, quase toda conta tem uma pergunta conceitual escondida.", "<strong>4. Revise as pegadinhas.</strong> Unidade, estrutura cristalina correta, temperatura em kelvin e diferença entre porcentagem em peso e concentração são os erros mais comuns."], "tips": ["Se você se sentir perdido, volte um nível acima no mapa e pergunte: <em>isso é ligação, estrutura, defeito ou transporte?</em>", "Prova de Materiais costuma repetir o <em>tipo</em> de raciocínio, não necessariamente o mesmo enunciado."], "example": "\n        <strong>Exemplo de uso do mapa:</strong><br>\n        Se o problema fala em $a$, $r$, densidade teórica, CFC/CCC/HC ou planos $(hkl)$, você deve ir para o ramo <strong>Estrutura Cristalina</strong>.<br><br>\n        Se fala em lacunas, solução sólida, Hume-Rothery ou contorno de grão, vá para <strong>Imperfeições</strong>.<br><br>\n        Se fala em fluxo, perfil de concentração, tempo, profundidade ou coeficiente $D$, vá para <strong>Difusão</strong>.\n        "}, "ligacoes": {"title": "Ligações e Energia", "badge": "CAPÍTULO 2 / QUESTÕES DE BASE", "condition": "$$\\text{Palavras-chave: energia de rede, PCI, }\\Delta EN,\\ T_f,\\ \\text{tipo de ligação}$$", "concept": "Aqui entram as questões que ligam estrutura eletrônica a propriedades. O objetivo é saber identificar o tipo de ligação predominante e usar isso para justificar comportamento ou fechar contas de energia.", "steps": ["<strong>1. Pergunte qual interação domina.</strong> Iônica, covalente, metálica ou secundária?", "<strong>2. Veja o que a banca quer.</strong> Classificação? comparação de propriedades? ou um cálculo energético?", "<strong>3. Se houver várias parcelas de energia, pense em ciclo de Born-Haber.</strong>", "<strong>4. Se houver eletronegatividade, pense em caráter iônico.</strong>"], "tips": ["Ligação mais forte costuma puxar ponto de fusão para cima.", "Curvas energia-distância mais profundas e íngremes costumam indicar maior rigidez e menor expansão térmica."], "example": "\n        <strong>Mini-resumo mental:</strong><br>\n        Iônica $\\to$ atração eletrostática forte entre íons, alto $T_f$ e alta energia de rede.<br>\n        Covalente $\\to$ direção importa, frequentemente alta rigidez e menor densidade em muitos casos.<br>\n        Metálica $\\to$ elétrons deslocalizados, boa condução e maior facilidade de deformação.\n        "}, "tipo_ligacao": {"title": "Como reconhecer o tipo de ligação", "badge": "CLASSIFICAÇÃO RÁPIDA", "condition": "$$\\text{olhe para: metal + ametal,\\ }\\Delta EN,\\ \\text{propriedades observadas}$$", "concept": "A classificação normalmente sai da combinação entre natureza química e propriedades macroscópicas. O atalho mais seguro é cruzar composição com comportamento.", "steps": ["<strong>Iônica:</strong> metal + ametal, grande diferença de eletronegatividade, sólidos duros e frágeis, altos pontos de fusão.", "<strong>Covalente:</strong> ametais ou semimetais compartilhando elétrons, ligação direcional, muita rigidez em redes covalentes.", "<strong>Metálica:</strong> metais entre si, elétrons deslocalizados, alta condutividade e boa conformabilidade.", "<strong>Secundária:</strong> moléculas, polímeros, gases nobres condensados; costuma explicar baixos pontos de fusão/ebulição."], "tips": ["Não force classificação 100% pura: muitos materiais têm caráter misto.", "Quando a questão pedir justificativa, fale em elétrons, intensidade de atração e mobilidade atômica/eletrônica."], "example": "\n        <strong>Exemplo:</strong><br>\n        BaS $\\to$ metal + ametal $\\Rightarrow$ forte caráter iônico.<br>\n        Latão $\\to$ liga metálica $\\Rightarrow$ ligação metálica predominante.<br>\n        Xenônio sólido $\\to$ interação secundária de van der Waals.\n        "}, "energia_rede": {"title": "Energia de rede / Born-Haber", "badge": "RECEITA DE CONTA", "condition": "$$\\text{Use quando aparecerem }\\Delta H_f,\\ \\text{ionizações, afinidades, sublimação e dissociação}$$", "concept": "A conta de energia de rede é uma soma organizada de etapas para formar o sólido iônico a partir dos elementos. A chave é controlar os sinais e fechar o balanço energético.", "steps": ["<strong>1. Escreva a reação global de formação.</strong>", "<strong>2. Quebre em etapas:</strong> sublimação/vaporização do metal, ionizações, dissociação da molécula diatômica, afinidades eletrônicas do ametal e formação da rede.", "<strong>3. Some tudo pela lei de Hess.</strong>", "<strong>4. Isole a energia de rede.</strong> Se a convenção do professor usar valor liberado, ela tende a sair negativa."], "tips": ["A 2ª afinidade eletrônica do oxigênio é positiva: adicionar elétron a um ânion já existente custa energia.", "Cuidado com frações como $\\tfrac{1}{2}O_2$ ou $\\tfrac{1}{2}Cl_2$."], "example": "\n        <strong>Esqueleto universal:</strong><br>\n        $$\\Delta H_f = \\Delta H_{\\text{sub}} + \\sum PI + \\frac{1}{2}D + \\sum AE + U_{\\text{rede}}$$\n        Logo,\n        $$U_{\\text{rede}} = \\Delta H_f - \\Delta H_{\\text{sub}} - \\sum PI - \\frac{1}{2}D - \\sum AE$$\n        <br>\n        Depois interprete: maior módulo de $U_{rede}$ $\\Rightarrow$ ligação iônica mais forte.\n        "}, "pci": {"title": "PCI e diferença de eletronegatividade", "badge": "CONTA CURTA + INTERPRETAÇÃO", "condition": "$$\\%CI = \\left(1-e^{-({\\Delta EN})^2/4}\\right)\\cdot 100$$", "concept": "Quando a questão dá eletronegatividades, normalmente quer comparar o quanto a ligação caminha para o lado iônico. A conta é curta; o importante é interpretar o resultado.", "steps": ["<strong>1. Calcule</strong> $\\Delta EN = |EN_A - EN_B|$.", "<strong>2. Substitua na fórmula do PCI.</strong>", "<strong>3. Compare os valores.</strong> Quanto maior o PCI, maior o caráter iônico.", "<strong>4. Use isso para justificar propriedade.</strong> Em geral, maior caráter iônico tende a favorecer maior energia de rede e altos pontos de fusão."], "tips": ["PCI não transforma automaticamente toda ligação em 'puramente iônica'; ele mede tendência.", "Se a questão pedir só ordem crescente, às vezes nem precisa calcular tudo: basta comparar $\\Delta EN$."], "example": "\n        <strong>Exemplo mental:</strong><br>\n        Se $\\\\Delta EN$ aumenta de Mg-Cl para Ba-Cl, o PCI cresce.<br>\n        Na prova, isso quase sempre vira ranking de compostos.\n        "}, "energia_ligacao": {"title": "Energia de ligação × ponto de fusão", "badge": "JUSTIFICATIVA/ESTIMATIVA", "condition": "$$E_0 \\uparrow \\Rightarrow T_f \\uparrow \\text{ (tendência geral)}$$", "concept": "Esse ramo aparece quando a prova pede estimar energia de ligação a partir de tendência com temperatura de fusão, ou justificar por que um material é mais rígido, menos expansível ou mais resistente.", "steps": ["<strong>1. Associe profundidade do poço de energia à força de ligação.</strong>", "<strong>2. Compare materiais.</strong> Ligação mais forte costuma levar a maior $T_f$.", "<strong>3. Se houver gráfico, leia tendência antes de calcular.</strong>", "<strong>4. Em questões discursivas, cite o formato da curva energia-distância.</strong>"], "tips": ["Rigidez está ligada à inclinação da curva perto de $r_0$; não apenas ao valor mínimo de energia.", "Baixa expansão térmica costuma estar associada a poço mais assimétrico e estreito."], "example": "\n        <strong>Lembrete de prova:</strong><br>\n        material com ligação mais forte $\\Rightarrow$ maior energia de ligação $\\Rightarrow$ geralmente maior $T_f$ e maior módulo elástico.\n        "}, "estrutura": {"title": "Estrutura Cristalina", "badge": "CAPÍTULO 3 / MUITA CONTA", "condition": "$$\\text{Palavras-chave: CFC, CCC, HC, }a,\\ r,\\ \\rho,\\ (hkl), [uvw], \\text{Bragg}$$", "concept": "Esse é o ramo mais algébrico. Em geral, a questão te dá estrutura + dado geométrico e pede fechar um parâmetro: aresta, raio, densidade, volume, FEA/APF, planos ou difração.", "steps": ["<strong>1. Identifique a estrutura.</strong> CFC, CCC, HC, NaCl, CsCl etc.", "<strong>2. Escolha a relação geométrica correta.</strong> É isso que separa acerto de erro.", "<strong>3. Depois entre na fórmula pedida:</strong> densidade, volume, fator de empacotamento, espaçamento interplanar ou Bragg.", "<strong>4. Faça conversão de unidade só no final, com calma.</strong>"], "tips": ["Grande parte dos erros aqui é usar a relação $a-r$ da estrutura errada.", "Em prova, vale ouro saber de cabeça: CFC tem 4 átomos/célula, CCC tem 2, HC convencional tem 6."], "example": "\n        <strong>Mantra:</strong><br>\n        Primeiro descubra a <em>geometria da célula</em>.<br>\n        Só depois faça a conta pedida.\n        "}, "cubicas": {"title": "CFC, CCC e HC — relações básicas", "badge": "NÚCLEO DA GEOMETRIA", "condition": "$$\\text{CFC: }a=2\\sqrt{2}r \\qquad \\text{CCC: }a=\\frac{4r}{\\sqrt{3}}$$", "concept": "Se a questão pede aresta, raio ou volume celular, quase tudo começa aqui. Em estruturas cúbicas, a relação vem da diagonal certa; em HC, geralmente você usa massa específica/volume celular ou parâmetros fornecidos.", "steps": ["<strong>CFC:</strong> contato ao longo da diagonal da face $\\Rightarrow 4r = \\sqrt{2}a$.", "<strong>CCC:</strong> contato ao longo da diagonal do corpo $\\Rightarrow 4r = \\sqrt{3}a$.", "<strong>HC:</strong> normalmente vale trabalhar com número de átomos por célula e densidade para achar o volume.", "<strong>Guarde também o número de átomos:</strong> CFC $=4$, CCC $=2$, HC convencional $=6$."], "tips": ["Quando o enunciado dá densidade e massa atômica, às vezes nem precisa do raio.", "Em transformação alotrópica (Fe-α para Fe-γ), calcule cada célula separadamente antes de comparar volumes."], "example": "\n        <strong>Exemplo:</strong><br>\n        Para Cr CCC com densidade conhecida, você pode usar\n        $$\\rho = \\frac{nA}{V_cN_A}=\\frac{nA}{a^3N_A}$$\n        e, se quiser o raio depois,\n        $$r=\\frac{\\sqrt{3}}{4}a.$$\n        "}, "densidade_fea": {"title": "Densidade teórica, FEA/APF e volume celular", "badge": "RECEITA DE FECHAMENTO", "condition": "$$\\rho = \\frac{nA}{V_cN_A} \\qquad APF = \\frac{V_{\\text{átomos}}}{V_c}$$", "concept": "Esse tipo de questão mede sua organização: contar corretamente quantos átomos há na célula, achar o volume da célula e depois comparar com o volume ocupado pelos átomos.", "steps": ["<strong>1. Conte</strong> $n$ átomos por célula.", "<strong>2. Ache</strong> $V_c$ pela geometria da célula.", "<strong>3. Para densidade:</strong> use $\\rho = nA/(V_cN_A)$.", "<strong>4. Para FEA/APF:</strong> some os volumes esféricos dos átomos dentro da célula e divida por $V_c$."], "tips": ["APF do CFC é o clássico $0{,}74$; do CCC, $0{,}68$.", "Se a densidade real for menor que a teórica, pense em lacunas."], "example": "\n        <strong>Exemplo rápido:</strong><br>\n        CFC:\n        $$APF = \\frac{4\\cdot \\frac{4}{3}\\pi r^3}{a^3}$$\n        com\n        $$a=2\\sqrt{2}r \\Rightarrow APF \\approx 0{,}74.$$\n        "}, "cristalografia": {"title": "Direções, planos e densidades", "badge": "VISUAL + REGRA", "condition": "$$[uvw]\\ \\text{é direção} \\qquad (hkl)\\ \\text{é plano}$$", "concept": "Aqui o ideal é transformar o desenho num procedimento. Direções nascem de vetores; planos nascem de interceptos. Depois disso, você pode calcular densidade linear ou planar.", "steps": ["<strong>Direção:</strong> pegue deslocamentos entre origem e ponto final em unidades de célula, elimine frações e escreva em $[uvw]$.", "<strong>Plano:</strong> ache os interceptos nos eixos, tome os recíprocos, elimine frações e escreva em $(hkl)$.", "<strong>Densidade linear/planar:</strong> conte quantos átomos efetivamente pertencem à linha/plano e divida pelo comprimento/área correspondentes.", "<strong>Em monocristais, o plano mais compacto tende a ter menor energia superficial.</strong>"], "tips": ["Não confunda $[100]$ com $(100)$: um é direção, outro é plano.", "Em CFC, o plano mais compacto é o $(111)$."], "example": "\n        <strong>Pegadinha clássica:</strong><br>\n        Se a questão pergunta qual plano tem maior energia superficial, procure o <em>menos compacto</em>.<br>\n        Quanto menos vizinhos e mais ligações quebradas por área, maior a energia superficial.\n        "}, "bragg": {"title": "Bragg e espaçamento interplanar", "badge": "RAIOS X SEM DRAMA", "condition": "$$n\\lambda = 2d\\sin\\theta \\qquad d_{hkl}=\\frac{a}{\\sqrt{h^2+k^2+l^2}} \\ \\text{(cúbicos)}$$", "concept": "Essas questões são quase sempre uma cadeia curta: usar Bragg para achar $d$ ou $\\lambda$, e ligar $d$ à estrutura cristalina para achar $a$ ou $r$.", "steps": ["<strong>1. Leia com atenção se o ângulo dado é</strong> $\\theta$ <strong>ou</strong> $2\\theta$.", "<strong>2. Use Bragg para achar a grandeza faltante.</strong>", "<strong>3. Se a estrutura for cúbica, use</strong> $d_{hkl}=a/\\sqrt{h^2+k^2+l^2}$.", "<strong>4. Se precisar de raio, volte da aresta para o raio usando a relação da estrutura.</strong>"], "tips": ["Muita questão fornece $2\\theta$; então use $\\theta = (2\\theta)/2$.", "Primeira ordem significa $n=1$; segunda ordem, $n=2$."], "example": "\n        <strong>Roteiro relâmpago:</strong><br>\n        dado $2\\\\theta$ e $n$ $\\Rightarrow$ ache $\\\\theta$ $\\Rightarrow$ use Bragg para $d$ $\\Rightarrow$ use $d_{hkl}$ para achar $a$ $\\Rightarrow$ use a estrutura para achar $r$.\n        "}, "ionicos": {"title": "Estruturas iônicas: NaCl, CsCl e razão de raios", "badge": "QUANDO O METAL VIRA CERÂMICA", "condition": "$$\\text{olhe coordenação, geometria e quem toca quem}$$", "concept": "Nas estruturas iônicas, a geometria depende do tamanho relativo entre cátion e ânion. Em exercícios, isso costuma virar coordenação, fator de empacotamento iônico, distância entre íons e razão mínima de raios.", "steps": ["<strong>1. Identifique a estrutura.</strong> NaCl não é igual a CsCl; a coordenação muda.", "<strong>2. Descubra quem está tocando quem.</strong> Nem sempre o contato é entre íons iguais.", "<strong>3. Monte a relação geométrica da estrutura.</strong>", "<strong>4. Só então calcule distância, parâmetro de rede ou fator de empacotamento.</strong>"], "tips": ["Em compostos iônicos, o fator de empacotamento não segue automaticamente os mesmos atalhos dos metais.", "Questões de razão de raios pedem desenho mental da coordenação."], "example": "\n        <strong>Exemplo de raciocínio:</strong><br>\n        Se a estrutura for do NaCl, você deve pensar em coordenação 6 e em uma geometria diferente da do CsCl.<br>\n        Se a questão pede distância cátion-ânion, use o contato mais próximo; se pede cátion-cátion, a rota geométrica muda.\n        "}, "imperfeicoes": {"title": "Imperfeições em Sólidos", "badge": "CAPÍTULO 4 / CONTA + CONCEITO", "condition": "$$\\text{Palavras-chave: lacunas, intersticiais, solução sólida, Hume-Rothery, superfície}$$", "concept": "Esse bloco mistura fórmulas curtas com interpretação microestrutural. O segredo é reconhecer se o defeito é pontual, substitucional/intersticial ou interfacial.", "steps": ["<strong>1. Se o defeito é ausência de átomo, pense em vacância.</strong>", "<strong>2. Se há átomo estranho no retículo, classifique:</strong> substitucional ou intersticial.", "<strong>3. Se a questão fala em solubilidade total, lembre Hume-Rothery.</strong>", "<strong>4. Se fala em energia de superfície ou contorno de grão, pense em quebra/desordem de ligações.</strong>"], "tips": ["Aqui a banca adora ligar conta com física: não basta calcular, precisa interpretar o defeito.", "Em metais, aumento de defeitos e contornos geralmente altera difusão, resistência e energia armazenada."], "example": "\n        <strong>Mapa mental interno:</strong><br>\n        ponto vazio $\\Rightarrow$ lacuna;<br>\n        átomo pequeno ocupando vão $\\Rightarrow$ intersticial;<br>\n        átomo substituindo hospedeiro $\\Rightarrow$ substitucional;<br>\n        interface entre regiões $\\Rightarrow$ energia interfacial.\n        "}, "vacancias": {"title": "Vacâncias: fração, número e densidade real × teórica", "badge": "FÓRMULA CLÁSSICA", "condition": "$$N_v = N\\exp\\left(-\\frac{Q_v}{kT}\\right)$$", "concept": "Vacância é o defeito pontual mais cobrado em conta. O problema normalmente pede número de lacunas, fração de sítios vagos ou estimar energia de formação.", "steps": ["<strong>1. Coloque a temperatura em kelvin.</strong>", "<strong>2. Identifique o que é conhecido:</strong> $N_v$, $N$, $Q_v$ ou fração $N_v/N$.", "<strong>3. Use a expressão exponencial e isole a incógnita.</strong>", "<strong>4. Se a questão falar em densidade real menor que a teórica, use a diferença para estimar quantos sítios estão faltando.</strong>"], "tips": ["Use a constante de Boltzmann compatível com a unidade de energia; se $Q_v$ estiver em eV/átomo, mantenha $k$ em eV/átomo·K.", "Densidade real menor que a teórica sugere massa faltando na mesma célula geométrica."], "example": "\n        <strong>Exemplo mental:</strong><br>\n        se pedirem a fração de sítios vazios,\n        $$\\frac{N_v}{N}= \\exp\\left(-\\frac{Q_v}{kT}\\right).$$\n        Se pedirem $Q_v$, tome logaritmo:\n        $$Q_v=-kT\\ln\\left(\\frac{N_v}{N}\\right).$$\n        "}, "solidas": {"title": "Soluções sólidas e regras de Hume-Rothery", "badge": "CLASSIFICAÇÃO PRÁTICA", "condition": "$$\\text{substitucional} \\ \\text{ou}\\ \\text{intersticial}?$$", "concept": "Essas questões são bem padrão: decidir se o soluto entra substituindo o átomo da matriz ou ocupando interstícios, e avaliar se a solubilidade tende a ser total ou parcial.", "steps": ["<strong>Substitucional:</strong> soluto e solvente têm tamanhos parecidos; o soluto toma o lugar do átomo da matriz.", "<strong>Intersticial:</strong> soluto pequeno entra nos vazios do retículo; típico para C, H, O, N em metais.", "<strong>Solubilidade total (Hume-Rothery):</strong> diferença de raio pequena, mesma estrutura cristalina, eletronegatividades próximas e mesma valência ajudam.", "<strong>Se alguma regra falha, a tendência é cair para solubilidade parcial.</strong>"], "tips": ["O limite de cerca de 15% de diferença de raio é um bom filtro rápido.", "Carbono em ferro é o exemplo mental perfeito de solução sólida intersticial."], "example": "\n        <strong>Raciocínio rápido para a prova:</strong><br>\n        C, H e O são pequenos $\\Rightarrow$ pense primeiro em intersticial.<br>\n        Elementos metálicos com estrutura e raio parecidos $\\Rightarrow$ teste Hume-Rothery para substitucional.\n        "}, "interfaces": {"title": "Superfície, contorno de grão e energia", "badge": "QUESTÃO CONCEITUAL QUE DERRUBA", "condition": "$$\\text{mais ligações quebradas/desorganizadas} \\Rightarrow \\text{maior energia}$$", "concept": "Quando a prova pergunta qual plano tem maior energia superficial ou compara contornos de grão, a ideia central é quantas ligações ficam insatisfeitas e quão desorganizada é a interface.", "steps": ["<strong>1. Compare a compactação dos planos.</strong> Plano menos compacto tende a ter maior energia superficial.", "<strong>2. Em CFC,</strong> $(111)$ é mais compacto que $(100)$; portanto, costuma ter menor energia superficial.", "<strong>3. Contorno de grão tem energia porque a correspondência entre redes não é perfeita.</strong>", "<strong>4. Contornos de alto ângulo costumam ter maior energia que os de baixo ângulo.</strong>"], "tips": ["A pergunta não é sobre volume, e sim sobre vizinhança atômica na interface.", "Menor compactação = mais ligações quebradas por área = maior energia."], "example": "\n        <strong>Exemplo:</strong><br>\n        entre $(100)$ e $(111)$ em CFC, o $(100)$ tende a ter maior energia superficial porque é menos densamente empacotado.\n        "}, "difusao": {"title": "Difusão", "badge": "CAPÍTULO 5 / TRANSPORTE", "condition": "$$\\text{Palavras-chave: }J,\\ D,\\ Q_D,\\ t,\\ x,\\ \\text{perfil de concentração}$$", "concept": "Aqui a prova quer que você reconheça o regime físico e aplique a lei certa. O trio que manda no bloco é: Fick I, Fick II e Arrhenius.", "steps": ["<strong>1. Pergunte se o perfil é estacionário ou varia com o tempo.</strong>", "<strong>2. Se pedem fluxo através de placa com concentrações constantes, pense em Fick I.</strong>", "<strong>3. Se pedem concentração em profundidade e tempo, pense em Fick II.</strong>", "<strong>4. Se a temperatura muda e o problema pede $D$, pense em Arrhenius.</strong>"], "tips": ["Muitas questões de difusão são só reconhecimento de modelo.", "A física é sempre a mesma: átomo caminha do maior para o menor potencial químico/concentração."], "example": "\n        <strong>Mantra de difusão:</strong><br>\n        fluxo no estado estacionário $\\Rightarrow$ Fick I;<br>\n        perfil dependente do tempo $\\Rightarrow$ Fick II;<br>\n        dependência com temperatura $\\Rightarrow$ Arrhenius.\n        "}, "fick1": {"title": "Fick I — estado estacionário", "badge": "PLACA / FLUXO / REGIME CONSTANTE", "condition": "$$J = -D\\frac{dC}{dx} \\qquad \\text{e, se o perfil for linear, } J=-D\\frac{C_2-C_1}{x_2-x_1}$$", "concept": "Use Fick I quando o fluxo não muda com o tempo. Esse é o caso clássico da placa com espessura fixa e concentrações mantidas constantes nas duas faces.", "steps": ["<strong>1. Identifique</strong> $D$, as concentrações nas faces e a espessura.", "<strong>2. Monte o gradiente de concentração.</strong>", "<strong>3. Aplique Fick I e obtenha o fluxo</strong> $J$.", "<strong>4. Se a questão pedir massa total, use</strong> $M = JAt$."], "tips": ["O sinal negativo só indica sentido: do maior para o menor $C$.", "Se pedirem apenas magnitude do fluxo, entregue valor positivo."], "example": "\n        <strong>Exemplo de placa:</strong><br>\n        hidrogênio difundindo através de Pd com espessura $L$:\n        $$J = D\\frac{C_{alta}-C_{baixa}}{L}$$\n        em magnitude.\n        "}, "fick2": {"title": "Fick II — estado não estacionário / carbonetação", "badge": "TEMPO + PROFUNDIDADE", "condition": "$$\\frac{C_x-C_0}{C_s-C_0}=1-\\operatorname{erf}\\left(\\frac{x}{2\\sqrt{Dt}}\\right)$$", "concept": "Quando o perfil muda com o tempo, o problema geralmente envolve concentração em uma profundidade após certo tratamento térmico. A forma mais comum em prova é a solução para sólido semi-infinito com concentração superficial constante.", "steps": ["<strong>1. Reconheça o cenário:</strong> superfície mantida em $C_s$, interior inicialmente em $C_0$.", "<strong>2. Monte a razão de concentrações.</strong>", "<strong>3. Use tabela/inversa da função erro para achar</strong> $z=x/(2\\sqrt{Dt})$.", "<strong>4. Isole a incógnita:</strong> $t$, $x$ ou $D$."], "tips": ["Mesmo sem resolver a erf exatamente, vale lembrar a proporcionalidade: a profundidade cresce com $\\sqrt{Dt}$.", "Se tudo é mantido igual e só a profundidade dobra, o tempo cresce aproximadamente com o quadrado."], "example": "\n        <strong>Atalho útil:</strong><br>\n        em problemas comparativos na mesma temperatura e mesma fração de concentração,\n        $$x \\propto \\sqrt{t}\\quad \\Rightarrow \\quad t \\propto x^2.$$\n        Então dobrar a profundidade pede cerca de 4 vezes mais tempo.\n        "}, "arrhenius": {"title": "Arrhenius — como D muda com a temperatura", "badge": "QUANDO A PROVA TROCA T", "condition": "$$D=D_0\\exp\\left(-\\frac{Q_D}{RT}\\right)$$", "concept": "Esse ramo é usado quando o coeficiente de difusão não é dado diretamente na temperatura de interesse, ou quando você precisa extrair $D_0$ e $Q_D$ a partir de dois pontos ou de um gráfico.", "steps": ["<strong>1. Coloque a temperatura em kelvin.</strong>", "<strong>2. Se $D_0$ e $Q_D$ forem dados, substitua direto.</strong>", "<strong>3. Se tiver dois pontos $(T,D)$, linearize:</strong> $\\ln D = \\ln D_0 - Q_D/(RT)$.", "<strong>4. Em gráfico de</strong> $\\ln D$ <strong>versus</strong> $1/T$, a inclinação é $-Q_D/R$."], "tips": ["Se o gráfico vier em log base 10, a inclinação muda de interpretação; cheque o eixo antes de usar.", "Maior temperatura aumenta muito $D$ por causa do termo exponencial."], "example": "\n        <strong>Receita com dois pontos:</strong><br>\n        $$\\ln\\left(\\frac{D_2}{D_1}\\right)= -\\frac{Q_D}{R}\\left(\\frac{1}{T_2}-\\frac{1}{T_1}\\right)$$\n        Depois que achar $Q_D$, volte em uma das equações para obter $D_0$.\n        "}};
+  const modal = document.getElementById('modal');
+  const cheatModal = document.getElementById('cheatModal');
+  const scroller = document.getElementById('mapScroller');
+  let activeNode = null;
+
+  function typesetTargets(elements) {
+    if (window.MathJax && window.MathJax.typesetPromise) {
+      window.MathJax.typesetClear(elements);
+      window.MathJax.typesetPromise(elements).catch(() => {});
+    }
+  }
+
+  function openModal(event, id, element) {
+    if (event) event.preventDefault();
+    const item = materialData[id];
+    if (!item) return;
+
+    if (activeNode) activeNode.classList.remove('active');
+    activeNode = element || null;
+    if (activeNode) activeNode.classList.add('active');
+
+    document.getElementById('modalBadge').innerHTML = item.badge;
+    document.getElementById('modalTitle').innerHTML = item.title;
+    document.getElementById('modalCondition').innerHTML = item.condition;
+    document.getElementById('modalConcept').innerHTML = item.concept;
+    document.getElementById('modalSteps').innerHTML = item.steps.map(s => `<div class="step">${s}</div>`).join('');
+    document.getElementById('modalTips').innerHTML = item.tips.map(t => `<div class="tip">${t}</div>`).join('');
+    document.getElementById('modalExample').innerHTML = item.example;
+
+    modal.classList.add('open');
+    modal.setAttribute('aria-hidden', 'false');
+    typesetTargets([
+      document.getElementById('modalCondition'),
+      document.getElementById('modalConcept'),
+      document.getElementById('modalSteps'),
+      document.getElementById('modalTips'),
+      document.getElementById('modalExample')
+    ]);
+  }
+
+  function closeModal() {
+    modal.classList.remove('open');
+    modal.setAttribute('aria-hidden', 'true');
+  }
+
+  function openCheat() {
+    cheatModal.classList.add('open');
+    cheatModal.setAttribute('aria-hidden', 'false');
+    typesetTargets([cheatModal]);
+  }
+
+  function closeCheat() {
+    cheatModal.classList.remove('open');
+    cheatModal.setAttribute('aria-hidden', 'true');
+  }
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      closeModal();
+      closeCheat();
+    }
+  });
+
+  // click and drag navigation
+  (() => {
+    let isDown = false;
+    let startX = 0, startY = 0, scrollLeft = 0, scrollTop = 0;
+
+    const start = (x, y) => {
+      isDown = true;
+      scroller.classList.add('dragging');
+      startX = x;
+      startY = y;
+      scrollLeft = scroller.scrollLeft;
+      scrollTop = scroller.scrollTop;
+    };
+    const move = (x, y) => {
+      if (!isDown) return;
+      const dx = x - startX;
+      const dy = y - startY;
+      scroller.scrollLeft = scrollLeft - dx;
+      scroller.scrollTop = scrollTop - dy;
+    };
+    const end = () => {
+      isDown = false;
+      scroller.classList.remove('dragging');
+    };
+
+    scroller.addEventListener('mousedown', (e) => start(e.pageX, e.pageY));
+    window.addEventListener('mousemove', (e) => move(e.pageX, e.pageY));
+    window.addEventListener('mouseup', end);
+
+    scroller.addEventListener('touchstart', (e) => {
+      const t = e.touches[0];
+      start(t.pageX, t.pageY);
+    }, {passive:true});
+    scroller.addEventListener('touchmove', (e) => {
+      const t = e.touches[0];
+      move(t.pageX, t.pageY);
+    }, {passive:true});
+    scroller.addEventListener('touchend', end);
+  })();
+
+  // center roughly on the root at load
+  window.addEventListener('load', () => {
+    const root = document.querySelector('.node.root');
+    if (!root) return;
+    const rootRect = root.getBoundingClientRect();
+    const containerRect = scroller.getBoundingClientRect();
+    scroller.scrollLeft += (rootRect.left - containerRect.left) - (containerRect.width / 2) + (rootRect.width / 2);
+    openModal(null, 'start', root);
+  });
+</script>
+</body>
+</html>
