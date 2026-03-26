@@ -324,9 +324,11 @@
     .modal-body {
       overflow:auto;
       padding:22px;
-      display:grid;
+      display:flex;
+      flex-direction:column;
       gap:18px;
       min-width:0;
+      align-items:stretch;
     }
     .panel {
       background:#fbfcfe;
@@ -334,7 +336,14 @@
       border-radius:18px;
       padding:18px;
       min-width:0;
+      width:100%;
       overflow-wrap:anywhere;
+      flex:0 0 auto;
+      box-sizing:border-box;
+    }
+    .panel.condition,
+    .panel.example {
+      min-height:176px;
     }
     .panel h3 {
       margin:0 0 10px;
@@ -346,6 +355,11 @@
     .condition {
       background:linear-gradient(135deg, #edf4ff, #ffffff);
       border:1px solid #d9e8ff;
+    }
+    .condition > div {
+      display:block;
+      min-height:96px;
+      line-height:1.75;
     }
     .concept {
       color:#243247;
@@ -364,15 +378,70 @@
       background:#0f172a;
       border-color:#1e293b;
       color:#eef2ff;
-      overflow:auto;
+      overflow:visible;
     }
     .example h3 { color:#cbd5e1; }
     .example-content {
-      line-height:1.75;
-      font-size:.98rem;
+      display:flex;
+      flex-direction:column;
+      align-items:stretch;
+      gap:16px;
+      line-height:1.82;
+      font-size:1rem;
       min-width:0;
+      min-height:116px;
       white-space:normal;
       overflow-wrap:anywhere;
+    }
+    .example-block,
+    .example-lead {
+      width:100%;
+      min-width:0;
+      padding:18px 20px;
+      border-radius:18px;
+      line-height:1.75;
+      min-height:120px;
+      display:block;
+      box-sizing:border-box;
+    }
+    .example-lead {
+      background:rgba(255,255,255,.09);
+      border:1px solid rgba(203,213,225,.18);
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.04);
+    }
+    .example-block {
+      background:rgba(255,255,255,.055);
+      border:1px solid rgba(148,163,184,.18);
+      border-left:4px solid rgba(148,163,184,.58);
+    }
+    .example-subline,
+    .example-math {
+      display:block;
+      min-width:0;
+    }
+    .example-subline + .example-subline,
+    .example-subline + .example-math,
+    .example-math + .example-subline,
+    .example-math + .example-math {
+      margin-top:12px;
+      padding-top:12px;
+      border-top:1px dashed rgba(203,213,225,.18);
+    }
+    .example-subline {
+      min-height:30px;
+    }
+    .example-math {
+      padding:12px 14px 8px;
+      border-radius:14px;
+      background:rgba(148,163,184,.10);
+      overflow-x:auto;
+      overflow-y:hidden;
+      min-height:68px;
+    }
+    .example-block strong,
+    .example-lead strong {
+      display:inline-block;
+      margin-bottom:6px;
     }
     .panel .mjx-container[display="true"],
     .cheat-card .mjx-container[display="true"] {
@@ -514,11 +583,24 @@
         z-index:1;
       }
       .panel { padding:14px; border-radius:14px; }
+      .panel.condition,
+      .panel.example { min-height:148px; }
       .condition,
       .example,
       .steps,
       .tips { overflow-x:auto; }
-      .example-content { font-size:.92rem; }
+      .condition > div { min-height:84px; }
+      .example-content { font-size:.95rem; gap:12px; min-height:96px; }
+      .example-block,
+      .example-lead {
+        padding:14px;
+        border-radius:12px;
+        min-height:104px;
+      }
+      .example-math {
+        min-height:56px;
+        padding:9px 10px 5px;
+      }
     }
   </style>
 </head>
@@ -810,6 +892,46 @@
     }
   }
 
+  function formatExample(html) {
+    const clean = (html || '').trim();
+    if (!clean) return '';
+
+    const normalized = clean
+      .replace(/(?:<br\s*\/?\s*>\s*){3,}/gi, '<br><br>')
+      .replace(/&nbsp;/gi, ' ')
+      .trim();
+
+    const blocks = normalized
+      .split(/(?:<br\s*\/?\s*>\s*){2,}/i)
+      .map(part => part.trim())
+      .filter(Boolean);
+
+    if (!blocks.length) return clean;
+
+    const wrapBlock = (block, className) => {
+      const segments = block
+        .split(/<br\s*\/?\s*>/i)
+        .map(part => part.trim())
+        .filter(Boolean)
+        .map(part => {
+          const compact = part.replace(/\s+/g, ' ').trim();
+          const mathOnly = /^\$\$[\s\S]*\$\$$/.test(compact);
+          return mathOnly
+            ? `<div class="example-math">${part}</div>`
+            : `<div class="example-subline">${part}</div>`;
+        })
+        .join('');
+      return `<div class="${className}">${segments}</div>`;
+    };
+
+    return blocks
+      .map((block, index) => {
+        const isLead = index === 0 && /<strong>[\s\S]*?<\/strong>/.test(block);
+        return wrapBlock(block, isLead ? 'example-lead' : 'example-block');
+      })
+      .join('');
+  }
+
   function openModal(event, id, element) {
     if (event) event.preventDefault();
     const item = materialData[id];
@@ -825,7 +947,7 @@
     document.getElementById('modalConcept').innerHTML = item.concept;
     document.getElementById('modalSteps').innerHTML = item.steps.map(s => `<div class="step">${s}</div>`).join('');
     document.getElementById('modalTips').innerHTML = item.tips.map(t => `<div class="tip">${t}</div>`).join('');
-    document.getElementById('modalExample').innerHTML = item.example;
+    document.getElementById('modalExample').innerHTML = formatExample(item.example);
 
     modal.classList.add('open');
     modal.setAttribute('aria-hidden', 'false');
